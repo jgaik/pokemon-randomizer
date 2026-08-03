@@ -1,21 +1,15 @@
-import { useLocalStorage } from "@yamori-shared/react-utilities";
-import { StorageKey } from "../constants";
+import { useCurrentPokemonId, useRandomPokemonId } from "../hooks";
 
-interface RandomizeButtonProps {
-  pokemonCount: number;
-}
-
-export const RandomizeButton = ({ pokemonCount }: RandomizeButtonProps) => {
-  const [, setCurrentPokemonId] = useLocalStorage<number>(
-    StorageKey.CurrentPokemonId,
-  );
-
-  const randomizePokemon = () => {
-    setCurrentPokemonId(Math.floor(Math.random() * pokemonCount) + 1);
-  };
+export const RandomizeButton = () => {
+  const { setCurrentPokemonId } = useCurrentPokemonId();
+  const { getRandomPokemonId } = useRandomPokemonId();
 
   return (
-    <button type="button" onClick={randomizePokemon}>
+    <button
+      id="randomize-button"
+      type="button"
+      onClick={() => setCurrentPokemonId(getRandomPokemonId())}
+    >
       Randomize Pokémon
     </button>
   );

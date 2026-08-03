@@ -1,21 +1,22 @@
-import { use } from "react";
-import { useLocalStorage } from "@yamori-shared/react-utilities";
-import { RandomizeButton } from "./components";
-import { StorageKey } from "./constants";
-import { fetchPokemonCount } from "./utilities";
+import { use, useState } from "react";
+import { fetchPokemonCount } from "./services";
+import { PokemonCountContext } from "./helpers";
+import { CurrentPokemon, Header, Pokedex, RandomizeButton } from "./components";
 
-const pokemonCountPromise = fetchPokemonCount();
+const POKEMON_COUNT_PROMISE = fetchPokemonCount();
 
 export const App = () => {
-  const pokemonCount = use(pokemonCountPromise);
-  const [currentPokemonId] = useLocalStorage<number>(
-    StorageKey.CurrentPokemonId,
-  );
+  const pokemonCount = use(POKEMON_COUNT_PROMISE);
+  const [showPokedex, setShowPokedex] = useState(false);
 
   return (
-    <main>
-      <RandomizeButton pokemonCount={pokemonCount} />
-      <output>{currentPokemonId ?? "—"}</output>
-    </main>
+    <PokemonCountContext.Provider value={pokemonCount}>
+      <main>
+        <Header onChange={setShowPokedex} />
+        {showPokedex && <Pokedex />}
+        <CurrentPokemon />
+        <RandomizeButton />
+      </main>
+    </PokemonCountContext.Provider>
   );
 };
