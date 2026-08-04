@@ -1,6 +1,15 @@
-import { useLocalStorage } from "@yamori-shared/react-utilities";
+import {
+  getNonNullable,
+  useLocalStorage,
+} from "@yamori-shared/react-utilities";
 import { use, useMemo } from "react";
-import { PokemonCountContext, StorageKeys } from "./helpers";
+import {
+  CurrentPokemonActionsContext,
+  CurrentPokemonStateContext,
+  PokemonCountContext,
+  StorageKeys,
+  type PokemonResponse,
+} from "./helpers";
 
 export function usePokemonCount() {
   return use(PokemonCountContext);
@@ -67,9 +76,25 @@ export function useRandomPokemonId() {
   );
 }
 
-export function useCurrentPokemonId() {
-  const [currentPokemonId, setCurrentPokemonId, removeCurrentPokemonId] =
-    useLocalStorage<number>(StorageKeys.CurrentPokemonId);
+export function useCurrentPokemon() {
+  const [currentPokemon, setCurrentPokemon, removeCurrentPokemon] =
+    useLocalStorage<PokemonResponse>(StorageKeys.CurrentPokemon);
 
-  return { currentPokemonId, setCurrentPokemonId, removeCurrentPokemonId };
+  return {
+    currentPokemon,
+    setCurrentPokemon,
+    removeCurrentPokemon,
+  };
+}
+
+export function useCurrentPokemonState() {
+  const state = use(CurrentPokemonStateContext);
+
+  return getNonNullable(state, "Current Pokemon State Context");
+}
+
+export function useCurrentPokemonActions() {
+  const actions = use(CurrentPokemonActionsContext);
+
+  return getNonNullable(actions, "Current Pokemon Actions Context");
 }

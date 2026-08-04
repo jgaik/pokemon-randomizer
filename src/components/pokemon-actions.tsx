@@ -1,22 +1,35 @@
 import { assertNonNullable } from "@yamori-shared/react-utilities";
-import { useCurrentPokemonId, useFoundPokemonIds } from "../hooks";
+import {
+  useCurrentPokemonActions,
+  useCurrentPokemon,
+  useFoundPokemonIds,
+} from "../hooks";
 
 export const PokemonActions = () => {
-  const { currentPokemonId, removeCurrentPokemonId } = useCurrentPokemonId();
+  const { currentPokemon, removeCurrentPokemon } = useCurrentPokemon();
+  const { reset } = useCurrentPokemonActions();
 
   const { addFoundPokemonId } = useFoundPokemonIds();
 
   const handleFound = () => {
-    assertNonNullable(currentPokemonId, "Current pokemon ID");
-    addFoundPokemonId(currentPokemonId);
+    assertNonNullable(currentPokemon, "Current pokemon");
+    addFoundPokemonId(currentPokemon.id);
 
-    removeCurrentPokemonId();
+    removeCurrentPokemon();
+    reset();
   };
 
   return (
     <div id="pokemon-actions">
       <button onClick={handleFound}>Found</button>
-      <button onClick={removeCurrentPokemonId}>Skip</button>
+      <button
+        onClick={() => {
+          removeCurrentPokemon();
+          reset();
+        }}
+      >
+        Skip
+      </button>
     </div>
   );
 };

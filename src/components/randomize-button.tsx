@@ -1,14 +1,18 @@
-import { useCurrentPokemonId, useRandomPokemonId } from "../hooks";
+import { useCurrentPokemon } from "../hooks";
 
-export const RandomizeButton = () => {
-  const { setCurrentPokemonId } = useCurrentPokemonId();
-  const { getRandomPokemonId } = useRandomPokemonId();
+interface RandomizeButtonProps {
+  onClick: () => void;
+}
+
+export const RandomizeButton = ({ onClick }: RandomizeButtonProps) => {
+  const { currentPokemon } = useCurrentPokemon();
 
   return (
     <button
       id="randomize-button"
       type="button"
-      onClick={() => setCurrentPokemonId(getRandomPokemonId())}
+      disabled={!!currentPokemon}
+      onClick={onClick}
     >
       Randomize Pokémon
     </button>
