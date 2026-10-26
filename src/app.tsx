@@ -42,7 +42,7 @@ export const App = () => {
         <PokemonCountContext.Provider value={pokemonCount}>
           <main data-state={state}>
             <Header onChange={setShowPokedex} />
-            {showPokedex && <Pokedex />}
+            <Pokedex open={showPokedex} />
             <CurrentPokemon />
           </main>
         </PokemonCountContext.Provider>

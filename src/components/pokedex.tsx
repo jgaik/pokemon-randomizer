@@ -1,20 +1,24 @@
-import { useFoundPokemonIds, usePokemonCount } from "../hooks";
+import { usePokemonCount } from "../hooks";
+import { PokedexEntry } from "./pokedex-entry";
 
-export const Pokedex = () => {
+interface PokedexProps {
+  open: boolean;
+}
+
+export const Pokedex = ({ open }: PokedexProps) => {
   const pokemonCount = usePokemonCount();
-  const { hasFoundPokemonId } = useFoundPokemonIds();
 
   return (
-    <ol>
-      {Array.from({ length: pokemonCount }, (_, index) => {
-        const pokemonId = index + 1;
-
-        return (
-          <li key={pokemonId}>
-            {hasFoundPokemonId(pokemonId) ? "⭐" : "☆"} #{pokemonId}
-          </li>
-        );
-      })}
+    <ol data-open={open}>
+      {Array.from({ length: pokemonCount }, (_, index) => (
+        <li key={index + 1}>
+          {open ? (
+            <PokedexEntry id={index + 1} />
+          ) : (
+            <PokedexEntry.Index id={index + 1} />
+          )}
+        </li>
+      ))}
     </ol>
   );
 };
