@@ -1,12 +1,34 @@
+:root {
+  --font-pixel: "Silkscreen", monospace;
+}
+
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 html,
 body,
 #root,
 main {
   height: 100%;
+  height: 100dvh;
+}
+
+html,
+body {
+  overscroll-behavior: none;
 }
 
 body {
   margin: 0;
+
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 main {
@@ -14,76 +36,274 @@ main {
   overflow: auto;
 }
 
-header {
-  position: sticky;
+.header {
+  position: absolute;
   top: 0;
-  z-index: 1;
-  height: 5%;
+  right: 0;
+  left: 0;
+  z-index: 3;
+  box-sizing: border-box;
+  padding: calc(var(--safe-top) + 0.75rem) 5% 0.75rem;
 
-  label {
-    width: 100%;
-    height: 100%;
-    justify-content: center;
-    align-items: center;
-    display: flex;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  font-family: var(--font-pixel);
+  color: #484848;
+  text-shadow: 2px 2px 0 #b8b8b8;
+
+  /* Full width, framed only along the bottom edge. */
+  background: #f8f8f8;
+  border-bottom: var(--header-border) solid #505868;
+  box-shadow:
+    inset 0 -2px 0 #fff,
+    inset 0 -4px 0 #a8b0c0;
 }
 
+/* The filters slide open under the badge when the pokedex opens. */
 #randomize-button {
   position: absolute;
 
-  bottom: 10%;
-  left: 5%;
-  right: 5%;
-}
+  bottom: 0;
+  left: 0;
+  right: 0;
 
-main {
-  position: relative;
+  padding: 0;
   overflow: hidden;
+
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+main {
+  --actions-height: calc(6rem + var(--safe-bottom));
+  --header-border: 4px;
+  --badge-height: 30px;
+  --filters-height: calc(0.75rem + 2.75rem + 6px);
+  --header-height: calc(
+    var(--safe-top) + 1.5rem + var(--badge-height) + var(--header-border)
+  );
+  --logo-size: min(3.6rem, 10vw);
+  --mascot: min(384px, 100vw);
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-top: var(--header-height);
+
+  display: flex;
+  flex-direction: column;
+
+  background: linear-gradient(to bottom, #f1fbf1, #cfeccf);
 }
 
-ol {
-  height: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
+/* Fades to black while randomizing and back once the Pokémon is revealed. */
+main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
 
-  margin: 0;
-  padding: 1rem;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
 
-  list-style: none;
-  overflow-y: auto;
+  transition: opacity var(--bg-fade-ms) ease;
+}
+
+/* The list starts below the filters when they are open. */
+main {
+  --pokedex-top: var(--header-height);
+}
+
+main[data-pokedex="true"] {
+  --pokedex-top: calc(var(--header-height) + var(--filters-height));
+}
+
+main:is(
+    [data-state="id-animation"],
+    [data-state="silhouette-animation"]
+  )::before {
+  opacity: 1;
+}
+
+/* ---------- Pokédex ---------- */
+
+/* An overlay below the header and above the grass, so it never takes space
+   away from the stages. When closed it ignores clicks and is hidden. */
+.pokedex {
+  position: absolute;
+  top: var(--pokedex-top);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+
+  font-family: var(--font-pixel);
+  font-size: 0.75rem;
+
+  background: #e3f3e3;
 
   transform: translateY(-100%);
   opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 
   transition:
+    top 350ms ease,
     transform 350ms ease,
-    opacity 350ms ease;
+    opacity 350ms ease,
+    visibility 0s linear 350ms;
 
   &[data-open="true"] {
     transform: translateY(0);
     opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    transition:
+      top 350ms ease,
+      transform 350ms ease,
+      opacity 350ms ease,
+      visibility 0s;
   }
 }
 
-li {
-  aspect-ratio: 1 / 1;
+.header__filters {
+  display: flex;
+  justify-content: center;
+
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  animation: filtersIn 350ms ease;
+}
+
+.header > a {
+  align-self: center;
+}
+
+.header__filter-option {
+  flex: none;
+  width: 4.5rem;
+  height: 2.75rem;
+  border: 3px solid #505868;
 
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  color: #9aa1af;
+  background: #f8f8f8;
+  cursor: pointer;
+
+  &:first-of-type {
+    border-radius: 6px 0 0 6px;
+  }
+
+  &:last-of-type {
+    border-radius: 0 6px 6px 0;
+  }
+
+  & + & {
+    margin-left: -3px;
+  }
+
+  /* A switched off group looks faded. */
+  > svg {
+    opacity: 0.45;
+  }
+
+  &:has(:checked) {
+    color: #484848;
+    background: #cfeccf;
+
+    > svg {
+      opacity: 1;
+    }
+  }
+}
+
+.pokedex__list {
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-content: start;
+  gap: 1rem;
+
+  margin: 0;
+  padding: 1rem 1rem calc(1rem + var(--safe-bottom));
+
+  list-style: none;
+  overflow-y: auto;
+}
+
+.pokedex__silhouette {
+  filter: brightness(0);
+}
+
+/* A small card: number on top, picture in the middle, name at the bottom. */
+.pokedex__entry {
+  aspect-ratio: 3 / 4;
+
+  display: grid;
+  grid-template-rows: auto 1fr 2.5em;
+
+  text-align: center;
+  overflow-wrap: anywhere;
+
+  background: #f8f8f8;
+  border: 3px solid #505868;
+  border-radius: 6px;
+}
+
+.pokedex__id {
+  padding: 0.4em 0;
+  background: #dfe5ee;
+  border-bottom: 3px solid #505868;
+}
+
+.pokedex__image > span {
+  display: flex;
+}
+
+.pokedex__image {
+  min-height: 0;
+
+  display: flex;
   align-items: center;
   justify-content: center;
 
   img {
-    flex: 1;
-    min-height: 0;
+    max-width: 100%;
+    max-height: 100%;
+    image-rendering: pixelated;
   }
+}
+
+.pokedex__name {
+  border-top: 3px solid #505868;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.25em;
+  line-height: 1.1;
 }
 
 /* ---------- Shared ---------- */
 
-header,
+.header,
 #randomize-button,
 .id-animation,
 .silhouette-animation,
@@ -94,17 +314,271 @@ header,
     transform 250ms ease;
 }
 
+/* ---------- Stage ---------- */
+
+.id-animation,
+.silhouette-animation,
+.pokemon-reveal__content {
+  flex: 1;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Reserve the actions slot so the image stays aligned across all stages. */
+.id-animation,
+.silhouette-animation {
+  padding-bottom: var(--actions-height);
+}
+
+.pokemon-reveal {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.id-animation,
+.silhouette-animation__number,
+.pokemon-reveal output,
+.pokemon-reveal h2 {
+  font-family: var(--font-pixel);
+}
+
+.id-animation,
+.silhouette-animation__number {
+  color: #fff;
+  font-size: min(6rem, 18vw);
+  font-variant-numeric: tabular-nums;
+}
+
+.silhouette-animation {
+  display: grid;
+  grid-template: 100% / 100%;
+  place-items: center;
+}
+
+.pokemon-image {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+  max-height: 50%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.pokemon-reveal__details {
+  display: grid;
+  grid-template-rows: 0fr;
+  width: 90%;
+
+  opacity: 0;
+  animation: detailsExpand 500ms ease var(--bg-fade-ms) forwards;
+}
+
+.pokemon-reveal__details-content {
+  min-height: 0;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* The framed look of the action buttons. */
+.pokemon-actions button {
+  font-family: var(--font-pixel);
+  color: #484848;
+  text-shadow: 2px 2px 0 #b8b8b8;
+
+  background: #f8f8f8;
+  border: 4px solid #505868;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 2px #fff,
+    inset 0 0 0 4px #a8b0c0;
+}
+
+.header__badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  cursor: pointer;
+}
+
+.ball-icon {
+  flex: none;
+}
+
+.ball-icon--spinning {
+  animation: ballSpin 2.4s linear infinite;
+}
+
+.header__count {
+  font-size: 1.25rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Styled after a health bar: a framed track with a bright green fill. */
+.header__bar {
+  appearance: none;
+  flex: 1;
+  box-sizing: border-box;
+  height: 0.9rem;
+  overflow: hidden;
+
+  background: #fff;
+  border: 3px solid #505868;
+  border-radius: 4px;
+}
+
+/* Safari does not clip the parts to the rounded border, so they get the
+   border's inner radius themselves. */
+.header__bar::-webkit-progress-bar {
+  background: transparent;
+  border-radius: 1px;
+}
+
+.header__bar::-webkit-progress-value {
+  background: linear-gradient(#7ee8a0 0 35%, #38b860 35%);
+  border-radius: 1px;
+}
+
+.pokemon-actions {
+  flex: none;
+  box-sizing: border-box;
+  height: var(--actions-height);
+  padding: 0 5% var(--safe-bottom);
+
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  animation: slideUp 400ms ease var(--bg-fade-ms) both;
+
+  button {
+    flex: 1;
+    padding: 0.9rem 0;
+
+    font-size: 1.5rem;
+    letter-spacing: 0.08em;
+
+    cursor: pointer;
+
+    &:active {
+      translate: 0 2px;
+    }
+  }
+}
+
 /* ---------- Header ---------- */
 
-header {
+.header {
   transform: translateY(0);
   opacity: 1;
   user-select: none;
 }
 
-main:not([data-state="idle"]) header {
+.header,
+#randomize-button {
+  transition-duration: var(--exit-ms);
+}
+
+main:not([data-state="idle"], [data-state="shaking"]) .header {
   transform: translateY(-100%);
   opacity: 0;
+}
+
+/* ---------- Logo ---------- */
+
+.logo {
+  position: absolute;
+  top: calc((var(--header-height) + 100% - 22dvh) / 2);
+  left: 50%;
+  translate: -50% -50%;
+  width: max-content;
+  margin: 0;
+
+  font-family: var(--font-pixel);
+  font-size: var(--logo-size);
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  text-align: left;
+  pointer-events: none;
+}
+
+.logo__mascot {
+  position: absolute;
+  top: calc(
+    (var(--header-height) + 100% - 22dvh) / 2 - var(--mascot) / 2 -
+      var(--logo-size) * 0.4
+  );
+  width: var(--mascot);
+  height: var(--mascot);
+
+  image-rendering: pixelated;
+  pointer-events: none;
+  filter: brightness(0);
+  --rest-opacity: 0.22;
+  opacity: var(--rest-opacity);
+
+  animation: logoMascotEnter 700ms ease-out both;
+}
+
+.logo__mascot--left {
+  left: calc(50% - var(--mascot) * 0.635 - 20px);
+  --exit: -110vw;
+}
+
+.logo__mascot--right {
+  left: calc(50% - var(--mascot) * 0.323 + 20px);
+  --exit: 110vw;
+}
+
+.logo__letter {
+  display: inline-block;
+  transform-origin: bottom center;
+  -webkit-text-stroke: 0.14em #2b2f3a;
+  paint-order: stroke fill;
+  text-shadow: 0.1em 0.1em 0 #2b2f3a;
+
+  animation:
+    logoEnter 700ms ease-out both,
+    logoWave 4.6s steps(1, end) 1s infinite;
+  animation-delay: 0s, calc(1s + var(--index) * 70ms);
+}
+
+.logo__letter--first {
+  color: #e04848;
+  --exit: -110vw;
+}
+
+.logo__letter--second {
+  color: #f8f8f8;
+  --exit: 110vw;
+  animation-delay: 0s, calc(1s + var(--index) * 70ms + 600ms);
+}
+
+.logo__letter--indent {
+  margin-left: 1.6em;
+}
+
+main:not([data-state="idle"]) .logo__letter {
+  animation: logoExit 900ms ease-in both;
+}
+
+main:not([data-state="idle"]) .logo__mascot {
+  animation: logoMascotExit 1100ms ease-in 500ms both;
 }
 
 /* ---------- Randomize ---------- */
@@ -114,83 +588,393 @@ main:not([data-state="idle"]) header {
   transform: translateY(0);
 }
 
-main:not([data-state="idle"]) #randomize-button {
+main:not([data-state="idle"], [data-state="shaking"]) #randomize-button {
   opacity: 0;
   transform: translateY(24px);
   pointer-events: none;
 }
 
+/* ---------- Grass ---------- */
+
+.grass-row {
+  display: flex;
+  justify-content: center;
+}
+
+.grass-sprite {
+  flex: none;
+  display: block;
+  overflow: visible;
+
+  /* A share of the viewport height, snapped to whole pixels per grid cell. */
+  height: var(--grass-height);
+  height: max(
+    round(down, var(--grass-height), calc(var(--grid-height) * 1px)),
+    calc(var(--grid-height) * 1px)
+  );
+  width: auto;
+}
+
+/* Only the blades move; the ground stays put so nothing pops off it. */
+.grass-sprite[data-rustling="true"] .grass-sprite__blades {
+  animation: grassRustle var(--rustle-ms) steps(1, end);
+}
+
+/* A tap leaves :hover stuck on touch screens, so it only applies with a mouse. */
+#randomize-button:focus-visible .grass-sprite__blades {
+  animation: grassShakeFast 160ms steps(1, end) infinite;
+  animation-delay: calc(var(--tuft) * -37ms);
+}
+
+@media (hover: hover) {
+  #randomize-button:hover .grass-sprite__blades {
+    animation: grassShakeFast 160ms steps(1, end) infinite;
+    animation-delay: calc(var(--tuft) * -37ms);
+  }
+}
+
+/* Right after the click the whole field shakes hard. */
+main[data-state="shaking"] #randomize-button .grass-sprite__blades {
+  animation: grassShakeHard 120ms steps(1, end) infinite;
+  animation-delay: calc(var(--tuft) * -29ms);
+}
+
+main[data-state="shaking"] #randomize-button .grass-sprite__blade {
+  animation: grassSway 240ms steps(1, end) infinite;
+  animation-delay: calc(var(--index) * -40ms);
+}
+
+/* Once the number starts sliding up, the grass stops moving. */
+main:not([data-state="idle"], [data-state="shaking"])
+  #randomize-button
+  .grass-sprite__blades {
+  animation: none;
+}
+
+.grass-sprite[data-rustling="true"] .grass-sprite__blade {
+  animation: grassSway calc(var(--rustle-ms) / 2) steps(1, end) 2;
+  animation-delay: calc(var(--index) * -60ms);
+}
+
+.grass-sprite__ground {
+  fill: #6b4a2b;
+}
+
 /* ---------- ID ---------- */
 
+/* The number comes up from behind the grass. */
 .id-animation {
-  animation: idFadeIn 250ms ease;
+  animation: idSlideUp var(--slide-ms) ease-out both;
 }
 
 /* ---------- Silhouette ---------- */
 
+.silhouette-animation__number,
 .silhouette-animation__image {
-  animation: silhouettePulse 2400ms ease forwards;
+  grid-area: 1 / 1;
+
+  animation: swapPulse var(--slot-ms) linear forwards;
 }
 
-/* ---------- Reveal ---------- */
-
-.pokemon-reveal__image {
-  animation: revealImage 400ms ease;
+/* The first number continues the roll, so it only shrinks, in the second half. */
+.silhouette-animation[data-first="true"] .silhouette-animation__number {
+  animation-name: swapOut;
+  animation-duration: calc(var(--slot-ms) / 2);
+  animation-delay: calc(var(--slot-ms) / 2);
 }
 
-.pokemon-actions {
-  animation: slideUp 350ms ease both;
+/* The last silhouette only grows, in the first half, and stays. */
+.silhouette-animation[data-last="true"] .silhouette-animation__image {
+  animation-name: swapIn;
+  animation-duration: calc(var(--slot-ms) / 2);
+  animation-fill-mode: forwards;
 }
 
-.pokemon-reveal__info {
-  animation: slideUp 350ms ease both;
+.silhouette-animation__image {
+  filter: brightness(0) invert(1);
+}
+
+.silhouette-animation[data-active="number"] .silhouette-animation__image,
+.silhouette-animation[data-active="silhouette"]
+  .silhouette-animation__number {
+  display: none;
 }
 
 /* ---------- Keyframes ---------- */
 
-@keyframes idFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.85);
+@keyframes logoWave {
+  0%,
+  10.43%,
+  100% {
+    transform: translateY(0);
   }
 
-  to {
-    opacity: 1;
-    transform: scale(1);
+  2.61%,
+  7.83% {
+    transform: translateY(-0.2em);
+  }
+
+  5.22% {
+    transform: translateY(-0.4em);
   }
 }
 
-@keyframes silhouettePulse {
+@keyframes logoExit {
   0% {
-    opacity: 0;
-    transform: scale(0.75);
-    filter: brightness(0);
+    transform: none;
+    opacity: var(--rest-opacity, 1);
   }
 
-  20% {
-    opacity: 1;
-  }
-
-  50% {
-    transform: scale(1.08);
+  25% {
+    transform: skewX(-14deg);
+    opacity: var(--rest-opacity, 1);
   }
 
   100% {
-    transform: scale(1);
-    filter: brightness(0);
-    opacity: 1;
+    transform: translateX(var(--exit)) skewX(-14deg);
+    opacity: 0;
   }
 }
 
-@keyframes revealImage {
+@keyframes logoMascotExit {
+  0% {
+    translate: 0 0;
+    scale: 1;
+    filter: brightness(0);
+    opacity: var(--rest-opacity);
+  }
+
+  16% {
+    translate: 0 0;
+    scale: 1.06;
+    filter: brightness(1);
+    opacity: 1;
+  }
+
+  45% {
+    translate: 0 0;
+    scale: 1;
+    filter: brightness(1);
+    opacity: 1;
+  }
+
+  100% {
+    translate: var(--exit) 0;
+    scale: 1;
+    filter: brightness(1);
+    opacity: 0;
+  }
+}
+
+@keyframes logoMascotEnter {
+  from {
+    translate: var(--exit) 0;
+    opacity: 0;
+  }
+
+  to {
+    translate: 0 0;
+    opacity: var(--rest-opacity);
+  }
+}
+
+@keyframes logoEnter {
+  from {
+    transform: translateX(var(--exit)) skewX(-14deg);
+    opacity: 0;
+  }
+
+  to {
+    transform: none;
+    opacity: var(--rest-opacity, 1);
+  }
+}
+
+@keyframes idSlideUp {
   from {
     opacity: 0;
-    transform: scale(1.05);
+    transform: translateY(45dvh);
   }
 
   to {
     opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes grassRustle {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  12% {
+    transform: translateX(-2px);
+  }
+
+  25% {
+    transform: translateX(2px);
+  }
+
+  37% {
+    transform: translateX(-1px);
+  }
+
+  50% {
+    transform: translateX(1px);
+  }
+
+  62% {
+    transform: translateX(-1px);
+  }
+
+  75% {
+    transform: translateX(1px);
+  }
+
+  87% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes grassShakeHard {
+  0%,
+  100% {
+    transform: translateX(-2px);
+  }
+
+  50% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes grassShakeFast {
+  0%,
+  100% {
+    transform: translateX(-1px);
+  }
+
+  50% {
+    transform: translateX(1px);
+  }
+}
+
+@keyframes grassSway {
+  0%,
+  50% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(1px);
+  }
+
+  75% {
+    transform: translateX(-1px);
+  }
+}
+
+@keyframes ballSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes swapPulse {
+  0%,
+  100% {
+    transform: scale(0.1);
+  }
+
+  50% {
     transform: scale(1);
+  }
+}
+
+@keyframes swapOut {
+  to {
+    transform: scale(0.1);
+  }
+}
+
+@keyframes swapIn {
+  from {
+    transform: scale(0.1);
+  }
+}
+
+@keyframes catchShrink {
+  0% {
+    filter: brightness(1) invert(0);
+    scale: 1;
+  }
+
+  20% {
+    filter: brightness(0) invert(1);
+    scale: 1;
+  }
+
+  100% {
+    filter: brightness(0) invert(1);
+    scale: 0;
+  }
+}
+
+@keyframes catchBall {
+  0%,
+  14% {
+    opacity: 0;
+    scale: 0.6;
+  }
+
+  30% {
+    opacity: 1;
+    scale: 1.1;
+  }
+
+  40%,
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes runTop {
+  to {
+    translate: 0 -100dvh;
+    scale: 0.8;
+  }
+}
+
+@keyframes runLeft {
+  to {
+    translate: -120vw 0;
+  }
+}
+
+@keyframes runRight {
+  to {
+    translate: 120vw 0;
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideDown {
+  to {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@keyframes filtersIn {
+  from {
+    opacity: 0;
+    translate: 0 -0.5rem;
   }
 }
 
@@ -203,5 +987,147 @@ main:not([data-state="idle"]) #randomize-button {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes detailsExpand {
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+
+/* ---------- Run away ---------- */
+
+.pokemon-image[data-run="top"] {
+  animation: runTop 350ms ease-in forwards;
+}
+
+.pokemon-image[data-run="left"] {
+  animation: runLeft 350ms ease-in forwards;
+}
+
+.pokemon-image[data-run="right"] {
+  animation: runRight 350ms ease-in forwards;
+}
+
+.pokemon-reveal[data-running="true"] .pokemon-reveal__details {
+  grid-template-rows: 1fr;
+  animation: fadeOut 250ms ease forwards;
+}
+
+.pokemon-reveal[data-running="true"] .pokemon-actions {
+  animation: slideDown 350ms ease forwards;
+}
+
+.pokemon-image[data-catch="true"] {
+  animation: catchShrink 1100ms ease-in-out forwards;
+}
+
+.pokemon-reveal__ball {
+  position: absolute;
+  translate: -50% -50%;
+  animation: catchBall 1600ms ease-out both;
+}
+
+.pokemon-reveal[data-running="true"] .pokemon-reveal__ball {
+  animation: fadeOut 250ms ease forwards;
+}
+
+/* ---------- Storage manager ---------- */
+
+.storage-page {
+  box-sizing: border-box;
+  height: 100dvh;
+  overflow-y: auto;
+  padding: calc(1rem + var(--safe-top)) 1rem calc(1rem + var(--safe-bottom));
+
+  font-family: var(--font-pixel);
+  font-size: 0.75rem;
+  color: #484848;
+  user-select: text;
+  background: #e3f3e3;
+
+  h1 {
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
+  }
+}
+
+table.storage-page__table {
+  width: 100%;
+  background: #f8f8f8;
+
+  &,
+  thead th {
+    border: 3px solid #505868;
+  }
+
+  thead th,
+  tbody :is(td, th) {
+    padding: 0.4rem;
+    overflow-wrap: anywhere;
+  }
+
+  th {
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  thead {
+    background: #e3f3e3;
+
+    th {
+      text-align: left;
+    }
+  }
+
+  tbody :is(td, th) {
+    border: 0;
+  }
+
+  tbody :is(td, th) + :is(td, th) {
+    border-left: 3px solid #505868;
+  }
+
+  tbody tr:not(:first-child) .storage-page__table__group {
+    border-top: 3px solid #505868;
+  }
+
+  tbody th.storage-page__table__item {
+    padding-left: 1.2rem;
+    font-weight: 400;
+  }
+
+  tbody td:last-child {
+    width: 1%;
+    text-align: right;
+  }
+}
+
+/* ---------- Portrait only ---------- */
+
+.rotate-notice {
+  display: none;
+}
+
+/* iOS ignores the manifest's orientation lock, so on a touch device held
+   sideways the app is covered by a message asking to turn it back. */
+@media (orientation: landscape) and (pointer: coarse) and (max-height: 600px) {
+  .rotate-notice {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+
+    font-family: var(--font-pixel);
+    font-size: 1.25rem;
+    text-align: center;
+    color: #fff;
+    background: #000;
   }
 }

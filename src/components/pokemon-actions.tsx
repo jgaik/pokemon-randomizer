@@ -1,35 +1,20 @@
-import { assertNonNullable } from "@yamori-shared/react-utilities";
-import {
-  useCurrentPokemonActions,
-  useCurrentPokemon,
-  useFoundPokemonIds,
-} from "../hooks";
-
-export const PokemonActions = () => {
-  const { currentPokemon, removeCurrentPokemon } = useCurrentPokemon();
-  const { reset } = useCurrentPokemonActions();
-
-  const { addFoundPokemonId } = useFoundPokemonIds();
-
-  const handleFound = () => {
-    assertNonNullable(currentPokemon, "Current pokemon");
-    addFoundPokemonId(currentPokemon.id);
-
-    removeCurrentPokemon();
-    reset();
-  };
-
-  return (
-    <div id="pokemon-actions">
-      <button onClick={handleFound}>Found</button>
-      <button
-        onClick={() => {
-          removeCurrentPokemon();
-          reset();
-        }}
-      >
-        Skip
-      </button>
-    </div>
-  );
+type PokemonActionsProps = {
+  disabled: boolean;
+  onCatch: () => void;
+  onRun: () => void;
 };
+
+export const PokemonActions = ({
+  disabled,
+  onCatch,
+  onRun,
+}: PokemonActionsProps) => (
+  <div className="pokemon-actions">
+    <button disabled={disabled} onClick={onCatch}>
+      CATCH
+    </button>
+    <button disabled={disabled} onClick={onRun}>
+      RUN
+    </button>
+  </div>
+);

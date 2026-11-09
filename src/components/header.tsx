@@ -1,23 +1,42 @@
-import { useFoundPokemonIds, usePokemonCount } from "../hooks";
+import { padPokemonNumber } from "../helpers";
+import { usePokedex, usePokemonCount } from "../hooks";
+import { BallIcon } from "./ball-icon";
+import { PokedexFilter } from "./pokedex-filter";
 
 interface HeaderProps {
+  open: boolean;
   onChange: (checked: boolean) => void;
 }
 
-export const Header = ({ onChange }: HeaderProps) => {
+export const Header = ({ open, onChange }: HeaderProps) => {
   const pokemonCount = usePokemonCount();
-  const { foundPokemonCount } = useFoundPokemonIds();
+  const { caughtPokemonCount } = usePokedex();
 
   return (
-    <header>
-      <label>
+    <header className="header">
+      <label className="header__badge">
         <input
           type="checkbox"
+          checked={open}
           onChange={(e) => onChange(e.currentTarget.checked)}
           hidden
         />
-        {foundPokemonCount} / {pokemonCount}
+
+        <BallIcon />
+
+        <span className="header__count">
+          {padPokemonNumber(caughtPokemonCount, pokemonCount)}/{pokemonCount}
+        </span>
+
+        <progress
+          className="header__bar"
+          aria-label="Pokémon found"
+          max={pokemonCount}
+          value={caughtPokemonCount}
+        />
       </label>
+
+      {open && <PokedexFilter />}
     </header>
   );
 };

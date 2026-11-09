@@ -10,6 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/silkscreen": "^5.3.0",
+    "@yamori-design/icons": "^1.9.1",
+    "@yamori-design/react-components": "^3.0.0",
+    "@yamori-design/styles": "^2.11.0",
     "@yamori-shared/react-utilities": "^1.10.3",
     "classnames": "^2.5.1",
     "react": "^19.2.8",

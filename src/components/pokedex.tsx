@@ -1,4 +1,4 @@
-import { usePokemonCount } from "../hooks";
+import { usePokedex, usePokedexFilter, usePokemonCount } from "../hooks";
 import { PokedexEntry } from "./pokedex-entry";
 
 interface PokedexProps {
@@ -7,18 +7,23 @@ interface PokedexProps {
 
 export const Pokedex = ({ open }: PokedexProps) => {
   const pokemonCount = usePokemonCount();
+  const { getStatus } = usePokedex();
+  const { shownGroups } = usePokedexFilter();
+
+  const visibleIds = Array.from(
+    { length: pokemonCount },
+    (_, index) => index + 1,
+  ).filter((id) => shownGroups.has(getStatus(id) ?? "unseen"));
 
   return (
-    <ol data-open={open}>
-      {Array.from({ length: pokemonCount }, (_, index) => (
-        <li key={index + 1}>
-          {open ? (
-            <PokedexEntry id={index + 1} />
-          ) : (
-            <PokedexEntry.Index id={index + 1} />
-          )}
-        </li>
-      ))}
-    </ol>
+    <div className="pokedex" data-open={open}>
+      <ol className="pokedex__list">
+        {visibleIds.map((id) => (
+          <li key={id} className="pokedex__entry">
+            {open ? <PokedexEntry id={id} /> : <PokedexEntry.Index id={id} />}
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 };
